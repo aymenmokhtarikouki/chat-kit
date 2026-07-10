@@ -1,0 +1,18 @@
+{
+  "name": "@chatkit/express",
+  "version": "0.1.0",
+  "description": "Express 4/5 handlers for the chat REST endpoints: list threads (with unread counts), history, send, mark read, unread total. Structural req/res typing, envelope-agnostic, auth-agnostic (getUserId seam).",
+  "license": "UNLICENSED",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@chatkit/core": "0.1.0"
+  }
+}
