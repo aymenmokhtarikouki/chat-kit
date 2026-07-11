@@ -53,6 +53,18 @@ export interface ThreadStore {
   setParticipants(threadId: string, participantIds: string[]): Promise<void>
   markRead(threadId: string, userId: string, at: Date): Promise<void>
   getReadAt(threadId: string, userId: string): Promise<Date | null>
+  /**
+   * Optional — enables "seen by" UX in group threads: every stored read
+   * marker for the thread. Participants without a marker simply don't
+   * appear (the service fills them in as unread).
+   */
+  getReadStates?(threadId: string): Promise<Array<{ userId: string; readAt: Date }>>
+}
+
+/** Per-participant read state ("seen by") — null = never opened the thread. */
+export interface ThreadReadState {
+  userId: string
+  readAt: Date | null
 }
 
 export interface MessageStore {
@@ -130,6 +142,7 @@ export type ChatErrorCode =
   | 'EMPTY_MESSAGE'
   | 'MESSAGE_TOO_LONG'
   | 'RATE_LIMITED'
+  | 'NOT_SUPPORTED'
 
 export class ChatError extends Error {
   constructor(

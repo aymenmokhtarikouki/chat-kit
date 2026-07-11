@@ -14,7 +14,7 @@
  *
  * Full request/response shapes: contracts/API.md.
  */
-import { ChatError, ChatService } from '@chatkit/core'
+import { ChatError, ChatService, GroupService } from '@chatkit/core'
 
 export interface MinimalRequest {
   headers: Record<string, unknown>
@@ -48,6 +48,7 @@ export function createChatHandlers(
   send: Handler
   markRead: Handler
   unreadTotal: Handler
+  readStates: Handler
 } {
   const wrap = options.wrapResponse ?? ((data: unknown) => data)
   const getUserId = options.getUserId ?? ((req: MinimalRequest) => req.auth?.userId)
@@ -189,6 +190,217 @@ export function createChatHandlers(
         const userId = requireUser(req, res)
         if (!userId) return
         res.status(200).json(wrap({ unread: await chat.unreadTotal({ userId }) }))
+      } catch (err) {
+        fail(res, next, err)
+      }
+    },
+
+    /** GET /chat/threads/:id/read-states — "seen by" per participant. */
+    async readStates(req, res, next) {
+      try {
+        const userId = requireUser(req, res)
+        if (!userId) return
+        const threadId = str(req.params?.id)
+        if (!threadId) {
+          res.status(400).json({ error: { code: 'INVALID_INPUT', message: 'thread id is required' } })
+          return
+        }
+        res.status(200).json(wrap(await chat.readStates({ threadId, userId })))
+      } catch (err) {
+        fail(res, next, err)
+      }
+    },
+  }
+}
+
+/**
+ * Group-chat endpoints over a GroupService (same conventions as the chat
+ * handlers — envelope-agnostic, auth from req.auth.userId by default):
+ *
+ *   const g = createGroupHandlers(groups, { wrapResponse })
+ *   router.post('/chat/groups',                    requireAuth, g.create)
+ *   router.get('/chat/groups',                     requireAuth, g.list)
+ *   router.get('/chat/groups/:id',                 requireAuth, g.get)
+ *   router.post('/chat/groups/:id/members',        requireAuth, g.addMembers)
+ *   router.delete('/chat/groups/:id/members/:uid', requireAuth, g.removeMember)
+ *   router.post('/chat/groups/:id/leave',          requireAuth, g.leave)
+ *   router.patch('/chat/groups/:id',               requireAuth, g.rename)
+ *   router.post('/chat/groups/:id/role',           requireAuth, g.setRole)
+ */
+export function createGroupHandlers(
+  groups: GroupService,
+  options: ChatHandlersOptions = {},
+): {
+  create: Handler
+  list: Handler
+  get: Handler
+  addMembers: Handler
+  removeMember: Handler
+  leave: Handler
+  rename: Handler
+  setRole: Handler
+} {
+  const wrap = options.wrapResponse ?? ((data: unknown) => data)
+  const getUserId = options.getUserId ?? ((req: MinimalRequest) => req.auth?.userId)
+  const errorMode = options.onError ?? 'respond'
+
+  function fail(res: MinimalResponse, next: NextFn | undefined, err: unknown): void {
+    if (errorMode === 'next' && next) {
+      next(err)
+      return
+    }
+    if (err instanceof ChatError) {
+      res.status(err.status).json({ error: { code: err.code, message: err.message } })
+      return
+    }
+    res.status(500).json({ error: { code: 'INTERNAL', message: 'Internal error' } })
+  }
+
+  function requireUser(req: MinimalRequest, res: MinimalResponse): string | null {
+    const userId = getUserId(req)
+    if (!userId) {
+      res.status(401).json({ error: { code: 'UNAUTHENTICATED', message: 'Sign in required' } })
+      return null
+    }
+    return userId
+  }
+
+  function param(req: MinimalRequest, res: MinimalResponse, name: string): string | null {
+    const value = req.params?.[name]
+    if (typeof value !== 'string' || value.length === 0) {
+      res.status(400).json({ error: { code: 'INVALID_INPUT', message: `${name} is required` } })
+      return null
+    }
+    return value
+  }
+
+  return {
+    async create(req, res, next) {
+      try {
+        const userId = requireUser(req, res)
+        if (!userId) return
+        const body = (req.body ?? {}) as { name?: string; memberIds?: string[] }
+        if (typeof body.name !== 'string') {
+          res.status(400).json({ error: { code: 'INVALID_INPUT', message: 'name is required' } })
+          return
+        }
+        const memberIds = Array.isArray(body.memberIds)
+          ? body.memberIds.filter((id): id is string => typeof id === 'string')
+          : []
+        const group = await groups.createGroup({ creatorId: userId, name: body.name, memberIds })
+        res.status(201).json(wrap(group))
+      } catch (err) {
+        fail(res, next, err)
+      }
+    },
+
+    async list(req, res, next) {
+      try {
+        const userId = requireUser(req, res)
+        if (!userId) return
+        res.status(200).json(wrap(await groups.listGroups(userId)))
+      } catch (err) {
+        fail(res, next, err)
+      }
+    },
+
+    async get(req, res, next) {
+      try {
+        const userId = requireUser(req, res)
+        if (!userId) return
+        const groupId = param(req, res, 'id')
+        if (!groupId) return
+        res.status(200).json(wrap(await groups.getGroup({ groupId, userId })))
+      } catch (err) {
+        fail(res, next, err)
+      }
+    },
+
+    async addMembers(req, res, next) {
+      try {
+        const userId = requireUser(req, res)
+        if (!userId) return
+        const groupId = param(req, res, 'id')
+        if (!groupId) return
+        const body = (req.body ?? {}) as { memberIds?: string[] }
+        const memberIds = Array.isArray(body.memberIds)
+          ? body.memberIds.filter((id): id is string => typeof id === 'string')
+          : []
+        if (memberIds.length === 0) {
+          res.status(400).json({ error: { code: 'INVALID_INPUT', message: 'memberIds is required' } })
+          return
+        }
+        res.status(200).json(wrap(await groups.addMembers({ groupId, actorId: userId, memberIds })))
+      } catch (err) {
+        fail(res, next, err)
+      }
+    },
+
+    async removeMember(req, res, next) {
+      try {
+        const userId = requireUser(req, res)
+        if (!userId) return
+        const groupId = param(req, res, 'id')
+        const memberId = groupId && param(req, res, 'uid')
+        if (!groupId || !memberId) return
+        res.status(200).json(wrap(await groups.removeMember({ groupId, actorId: userId, memberId })))
+      } catch (err) {
+        fail(res, next, err)
+      }
+    },
+
+    async leave(req, res, next) {
+      try {
+        const userId = requireUser(req, res)
+        if (!userId) return
+        const groupId = param(req, res, 'id')
+        if (!groupId) return
+        res.status(200).json(wrap(await groups.leaveGroup({ groupId, userId })))
+      } catch (err) {
+        fail(res, next, err)
+      }
+    },
+
+    async rename(req, res, next) {
+      try {
+        const userId = requireUser(req, res)
+        if (!userId) return
+        const groupId = param(req, res, 'id')
+        if (!groupId) return
+        const body = (req.body ?? {}) as { name?: string }
+        if (typeof body.name !== 'string') {
+          res.status(400).json({ error: { code: 'INVALID_INPUT', message: 'name is required' } })
+          return
+        }
+        res.status(200).json(wrap(await groups.renameGroup({ groupId, actorId: userId, name: body.name })))
+      } catch (err) {
+        fail(res, next, err)
+      }
+    },
+
+    async setRole(req, res, next) {
+      try {
+        const userId = requireUser(req, res)
+        if (!userId) return
+        const groupId = param(req, res, 'id')
+        if (!groupId) return
+        const body = (req.body ?? {}) as { memberId?: string; role?: string }
+        if (typeof body.memberId !== 'string' || !['owner', 'admin', 'member'].includes(body.role ?? '')) {
+          res.status(400).json({
+            error: { code: 'INVALID_INPUT', message: 'memberId and role (owner|admin|member) are required' },
+          })
+          return
+        }
+        res.status(200).json(
+          wrap(
+            await groups.setRole({
+              groupId,
+              actorId: userId,
+              memberId: body.memberId,
+              role: body.role as 'owner' | 'admin' | 'member',
+            }),
+          ),
+        )
       } catch (err) {
         fail(res, next, err)
       }

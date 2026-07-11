@@ -6,6 +6,17 @@ export type { RateLimiter } from './ratelimit'
 
 export { createMemoryMessageStore, createMemoryThreadStore } from './memory'
 
+export { createGroupService, createMemoryGroupStore, groupScope } from './groups'
+export type {
+  ChatGroup,
+  CreateGroupServiceArgs,
+  GroupEvent,
+  GroupMember,
+  GroupRole,
+  GroupService,
+  GroupStore,
+} from './groups'
+
 export { ChatError } from './types'
 export type {
   ChatErrorCode,
@@ -18,6 +29,7 @@ export type {
   PresenceLike,
   RealtimeLike,
   ScopePolicy,
+  ThreadReadState,
   ThreadStore,
   ThreadWithUnread,
 } from './types'

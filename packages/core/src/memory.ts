@@ -65,6 +65,16 @@ export function createMemoryThreadStore(): ThreadStore & { rows: ChatThread[] } 
     async getReadAt(threadId, userId) {
       return readAt.get(`${threadId}:${userId}`) ?? null
     },
+
+    async getReadStates(threadId) {
+      const states: Array<{ userId: string; readAt: Date }> = []
+      for (const [key, at] of readAt) {
+        if (key.startsWith(`${threadId}:`)) {
+          states.push({ userId: key.slice(threadId.length + 1), readAt: at })
+        }
+      }
+      return states
+    },
   }
 }
 

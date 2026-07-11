@@ -77,3 +77,47 @@ Errors: `400 INVALID_INPUT | EMPTY_MESSAGE | MESSAGE_TOO_LONG | UNKNOWN_SCOPE_TY
 
 `scopeType`/`scopeId` are the deep link: the client opens the order/inquiry
 conversation directly.
+
+## Groups (user-created multi-user threads)
+
+A group is a scope like any other — its thread, messages, unread counts and
+delivery all use the endpoints above with `scopeType: "group"`,
+`scopeId: <groupId>`. These endpoints manage the group itself:
+
+```jsonc
+// ChatGroup
+{
+  "id": "grp_1",
+  "name": "Weekend trip",
+  "createdBy": "alice",
+  "members": [ { "userId": "alice", "role": "owner" },
+               { "userId": "bob",   "role": "member" } ],
+  "createdAt": "2026-07-11T12:00:00.000Z"
+}
+```
+
+| endpoint | body | notes |
+| --- | --- | --- |
+| `POST /chat/groups` | `{ name, memberIds? }` | creator becomes `owner`; 201 → ChatGroup |
+| `GET /chat/groups` | — | groups the caller belongs to |
+| `GET /chat/groups/:id` | — | members only |
+| `POST /chat/groups/:id/members` | `{ memberIds }` | owner/admin; existing members skipped |
+| `DELETE /chat/groups/:id/members/:uid` | — | owner removes anyone (not owners); admin removes members |
+| `POST /chat/groups/:id/leave` | — | anyone but the owner (transfer first) |
+| `PATCH /chat/groups/:id` | `{ name }` | owner/admin |
+| `POST /chat/groups/:id/role` | `{ memberId, role }` | owner only; promoting to `owner` transfers (old owner → admin) |
+
+Membership changes appear in the thread as SYSTEM messages whose `data` is
+the structured event — render/localize client-side:
+
+```jsonc
+{ "type": "group.members_added", "actorId": "alice", "userIds": ["bob"] }
+// group.created | group.members_added | group.member_removed |
+// group.member_left | group.renamed | group.role_changed
+```
+
+### GET /chat/threads/:id/read-states — "seen by"
+
+`200 → [ { "userId": "bob", "readAt": "…" | null } ]` — one entry per
+participant; `null` = never opened. Requires a store implementing the
+optional `getReadStates`; otherwise `501 NOT_SUPPORTED`.

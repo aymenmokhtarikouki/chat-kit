@@ -33,6 +33,20 @@ policy: {
 }
 ```
 
+## Group chat
+
+Register the built-in scope and construct the group service after the chat
+service (it posts membership system messages through it):
+
+```ts
+const groupStore = createMemoryGroupStore() // or GroupStore on your schema
+// … policy: { scopes: { group: groupScope(groupStore) } }
+const groups = createGroupService({ store: groupStore, chat })
+```
+
+`GroupStore` is five methods over one table (id, name, createdBy, members
+JSON/join-table). "Seen by" needs the optional `ThreadStore.getReadStates`.
+
 ## Deployed clients keep working
 
 Every event name — outbound (`events.messageNew`, `events.threadRead`) and

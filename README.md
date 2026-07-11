@@ -83,6 +83,32 @@ name is configurable (`events` on the service, `inbound` on the gateway), so
 each app maps the kit onto the event names its Flutter/web clients already
 listen to.
 
+## Group chat
+
+Groups are first-class: a built-in scope backed by a `GroupStore` seam plus
+membership management with owner/admin/member roles.
+
+```ts
+import { createGroupService, createMemoryGroupStore, groupScope } from '@chatkit/core'
+
+const groupStore = createMemoryGroupStore()                 // or your table
+const chat = createChatService({
+  policy: { scopes: { group: groupScope(groupStore) /* + your domain scopes */ } },
+  // …
+})
+const groups = createGroupService({ store: groupStore, chat })
+
+const g = await groups.createGroup({ creatorId, name: 'Weekend trip', memberIds })
+await chat.sendMessage({ scopeType: 'group', scopeId: g.id, senderId, text: 'hi all' })
+await groups.addMembers({ groupId: g.id, actorId, memberIds: ['dave'] })   // owner/admin
+```
+
+Membership changes post SYSTEM messages with structured `data`
+(`group.members_added`, …) for client-side i18n; rosters re-sync instantly
+(removed members lose access on their next call). Per-participant read
+states power "seen by" via `chat.readStates()`. Everything else — delivery,
+unread, offline push, rate limiting — already worked for N participants.
+
 ## Docs
 
 - [contracts/API.md](contracts/API.md) — REST shapes for Flutter/web clients
@@ -94,6 +120,6 @@ listen to.
 
 ```bash
 npm run setup      # install workspaces + build (CI runs exactly this)
-npm test           # vitest — 29 tests
+npm test           # vitest
 npm run typecheck
 ```

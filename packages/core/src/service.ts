@@ -21,6 +21,7 @@ import {
   PresenceLike,
   RealtimeLike,
   ScopePolicy,
+  ThreadReadState,
   ThreadStore,
   ThreadWithUnread,
 } from './types'
@@ -92,6 +93,11 @@ export interface ChatService<Ctx = unknown> {
   markRead(input: { threadId: string; userId: string }): Promise<void>
   unreadCount(input: { threadId: string; userId: string }): Promise<number>
   unreadTotal(input: { userId: string }): Promise<number>
+  /**
+   * "Seen by" — one entry per participant (readAt null = never opened).
+   * Requires the optional ThreadStore.getReadStates.
+   */
+  readStates(input: { threadId: string; userId: string }): Promise<ThreadReadState[]>
 }
 
 const DEFAULT_EVENTS: ChatEventNames = {
@@ -337,6 +343,20 @@ export function createChatService<Ctx = unknown>(args: CreateChatServiceArgs<Ctx
       // inbox); a dedicated store method can replace this without API change.
       const { items } = await service.listThreads({ userId, limit: 100 })
       return items.reduce((sum, t) => sum + t.unreadCount, 0)
+    },
+
+    async readStates({ threadId, userId }) {
+      const thread = await requireThread(threadId)
+      if (!thread.participantIds.includes(userId)) {
+        throw new ChatError('NOT_PARTICIPANT', 403, 'You are not part of this conversation.')
+      }
+      if (!stores.threads.getReadStates) {
+        throw new ChatError('NOT_SUPPORTED', 501, 'This store does not track read states.')
+      }
+      const stored = new Map(
+        (await stores.threads.getReadStates(threadId)).map((s) => [s.userId, s.readAt]),
+      )
+      return thread.participantIds.map((id) => ({ userId: id, readAt: stored.get(id) ?? null }))
     },
   }
   return service

@@ -37,6 +37,14 @@ Deny by default: unknown scope type or missing scope → error; non-participants
 can neither read nor post. The roster is re-synced from the policy on every
 thread access, so staff changes propagate without app code.
 
+### Groups: a scope with managed membership
+Domain scopes get their roster for free (an order knows its parties). User-
+created groups don't — so the kit ships `GroupStore` + `createGroupService`:
+membership CRUD with owner/admin/member permissions (exactly one owner,
+transfer via setRole), membership events as system messages, and the same
+roster re-sync making removals take effect on the next call. The thread model
+is untouched — a group thread is an ordinary thread.
+
 ### Presence-aware delivery
 Realtime goes to every participant (multi-tab safe via per-user rooms). Push
 goes only to recipients who are offline *right now* — `PresenceLike` is the
