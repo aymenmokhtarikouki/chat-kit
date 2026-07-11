@@ -1,5 +1,5 @@
 /**
- * @chatkit/socketio — Socket.IO wiring for @chatkit/core, structurally typed
+ * @aymenkits/chat-socketio — Socket.IO wiring for @aymenkits/chat-core, structurally typed
  * (no socket.io import; any io-shaped server works, and tests use fakes).
  *
  * Wiring order (presence must exist before the service):
@@ -10,9 +10,9 @@
  *   attachChatGateway({ io, chat, identity: tokenService, presence })
  *
  * `identity` is anything with `verifyAccess(token) → { userId }` —
- * @authkit/core's TokenService fits as-is.
+ * @aymenkits/auth-core's TokenService fits as-is.
  */
-import type { ChatError, ChatService, PresenceLike, RealtimeLike } from '@chatkit/core'
+import type { ChatError, ChatService, PresenceLike, RealtimeLike } from '@aymenkits/chat-core'
 
 // ─── Structural Socket.IO shapes ─────────────────────────────────────────────
 
@@ -31,7 +31,7 @@ export interface ServerLike {
   to(room: string): { emit(event: string, payload: unknown): unknown }
 }
 
-/** @authkit/core TokenService satisfies this. */
+/** @aymenkits/auth-core TokenService satisfies this. */
 export interface IdentityLike {
   verifyAccess(token: string): { userId: string; claims?: unknown }
 }

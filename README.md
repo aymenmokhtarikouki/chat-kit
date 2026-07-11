@@ -8,24 +8,24 @@ the scope, posting rules are per scope type, deny by default.
 
 ```
 packages/
-  core      @chatkit/core      thread/message engine + policy + send pipeline (zero deps)
-  socketio  @chatkit/socketio  handshake auth, rooms, presence, transport (structural — no socket.io dep)
-  express   @chatkit/express   REST endpoints (threads, history, send, read, unread)
+  core      @aymenkits/chat-core      thread/message engine + policy + send pipeline (zero deps)
+  socketio  @aymenkits/chat-socketio  handshake auth, rooms, presence, transport (structural — no socket.io dep)
+  express   @aymenkits/chat-express   REST endpoints (threads, history, send, read, unread)
 ```
 
 ## The send pipeline
 
 ```
 policy.canPost → rate limit → persist → touch thread
-   → realtime emit to every participant          (@chatkit/socketio rooms)
-   → presence miss? → notifier for offline ones  (@notifykit/core push, deep-link data)
+   → realtime emit to every participant          (@aymenkits/chat-socketio rooms)
+   → presence miss? → notifier for offline ones  (@aymenkits/notify-core push, deep-link data)
 ```
 
 ## Quick start
 
 ```ts
-import { createChatService } from '@chatkit/core'
-import { attachChatGateway, createPresenceTracker, createSocketTransport } from '@chatkit/socketio'
+import { createChatService } from '@aymenkits/chat-core'
+import { attachChatGateway, createPresenceTracker, createSocketTransport } from '@aymenkits/chat-socketio'
 
 const presence  = createPresenceTracker()
 const transport = createSocketTransport(io)
@@ -34,7 +34,7 @@ const chat = createChatService({
   stores: { threads: myThreadStore, messages: myMessageStore }, // your schema
   realtime: transport,
   presence,
-  notifier,                                  // @notifykit/core Notifier — fits as-is
+  notifier,                                  // @aymenkits/notify-core Notifier — fits as-is
   policy: {
     scopes: {
       order: {
@@ -50,7 +50,7 @@ const chat = createChatService({
   },
 })
 
-attachChatGateway({ io, chat, identity: tokenService /* @authkit/core */, presence })
+attachChatGateway({ io, chat, identity: tokenService /* @aymenkits/auth-core */, presence })
 
 // Anywhere in the app — status updates land in the conversation:
 await chat.postSystemMessage({
@@ -74,9 +74,9 @@ await chat.postSystemMessage({
 
 | parameter | satisfied by | contract |
 | --- | --- | --- |
-| `identity` (socket handshake) | `@authkit/core` `TokenService` | `verifyAccess(token) → { userId }` |
-| `notifier` | `@notifykit/core` `Notifier` | `notify(userIds, { type, data })` |
-| REST auth | `@authkit/express` middleware | handlers read `req.auth.userId` by default |
+| `identity` (socket handshake) | `@aymenkits/auth-core` `TokenService` | `verifyAccess(token) → { userId }` |
+| `notifier` | `@aymenkits/notify-core` `Notifier` | `notify(userIds, { type, data })` |
+| REST auth | `@aymenkits/auth-express` middleware | handlers read `req.auth.userId` by default |
 
 **Deployed clients keep working:** every inbound and outbound socket event
 name is configurable (`events` on the service, `inbound` on the gateway), so
@@ -89,7 +89,7 @@ Groups are first-class: a built-in scope backed by a `GroupStore` seam plus
 membership management with owner/admin/member roles.
 
 ```ts
-import { createGroupService, createMemoryGroupStore, groupScope } from '@chatkit/core'
+import { createGroupService, createMemoryGroupStore, groupScope } from '@aymenkits/chat-core'
 
 const groupStore = createMemoryGroupStore()                 // or your table
 const chat = createChatService({

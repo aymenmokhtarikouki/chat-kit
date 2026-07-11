@@ -3,7 +3,7 @@ import {
   createChatService,
   createMemoryMessageStore,
   createMemoryThreadStore,
-} from '@chatkit/core'
+} from '@aymenkits/chat-core'
 import { createChatHandlers, MinimalRequest, MinimalResponse } from '../src/index'
 
 function buildChat() {

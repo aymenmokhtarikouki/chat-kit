@@ -1,6 +1,6 @@
 # chat-kit — socket contract
 
-What `@chatkit/socketio` speaks. **Every event name below is a DEFAULT** —
+What `@aymenkits/chat-socketio` speaks. **Every event name below is a DEFAULT** —
 both directions are configurable (`events` on `createChatService`, `inbound`
 on `attachChatGateway`) so deployed clients keep their existing names.
 
@@ -11,7 +11,7 @@ io('/…', { auth: { token: '<access token>' } })
 ```
 
 The gateway verifies the token through the injected identity service
-(`@authkit/core` `TokenService.verifyAccess`). Invalid/missing token → the
+(`@aymenkits/auth-core` `TokenService.verifyAccess`). Invalid/missing token → the
 connection is refused with error message `UNAUTHENTICATED`.
 
 On success the socket joins the user's room (`chat:user:<userId>` by

@@ -1,7 +1,7 @@
 {
-  "name": "@chatkit/core",
+  "name": "@aymenkits/chat-core",
   "version": "1.0.0",
-  "description": "Chat engine: scope-typed threads (order/inquiry/salon-pair) with a policy deciding who chats with whom, send pipeline persist → realtime → presence-miss → notifier, unread counts, system messages, per-sender rate limiting. Seams: ThreadStore, MessageStore, RealtimeLike, PresenceLike, NotifierLike (matches @notifykit/core by shape). Zero dependencies.",
+  "description": "Chat engine: scope-typed threads (order/inquiry/salon-pair) with a policy deciding who chats with whom, send pipeline persist → realtime → presence-miss → notifier, unread counts, system messages, per-sender rate limiting. Seams: ThreadStore, MessageStore, RealtimeLike, PresenceLike, NotifierLike (matches @aymenkits/notify-core by shape). Zero dependencies.",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

@@ -3,8 +3,8 @@
 Same design rules as every kit in this family: **pure core + storage seams +
 structural adapters**. The kit never owns tables, never imports socket.io or
 express, and never imports a sibling kit — it declares parameter interfaces
-that sibling kits satisfy by shape (`identity` ← @authkit/core, `notifier` ←
-@notifykit/core).
+that sibling kits satisfy by shape (`identity` ← @aymenkits/auth-core, `notifier` ←
+@aymenkits/notify-core).
 
 ## The model
 
@@ -48,7 +48,7 @@ is untouched — a group thread is an ordinary thread.
 ### Presence-aware delivery
 Realtime goes to every participant (multi-tab safe via per-user rooms). Push
 goes only to recipients who are offline *right now* — `PresenceLike` is the
-seam, and `@chatkit/socketio`'s tracker (socket count per user) implements
+seam, and `@aymenkits/chat-socketio`'s tracker (socket count per user) implements
 it. Without presence, every non-sender recipient is notified — the safe
 default for apps without sockets (a web client can start there).
 
@@ -66,7 +66,7 @@ shipped client.
 ### Delivery is best-effort, persistence is truth
 Store failures fail the send. Realtime/notifier failures never do — they're
 isolated per recipient/channel and reported through `onError`, mirroring
-@notifykit/core. A missed socket event is recovered by the REST history
+@aymenkits/notify-core. A missed socket event is recovered by the REST history
 endpoint on next open.
 
 ## Seams
@@ -76,8 +76,8 @@ endpoint on next open.
 | `ThreadStore` / `MessageStore` | kit → app | Prisma / raw SQL; memory stores are the reference |
 | `RealtimeLike` | kit → adapter | `createSocketTransport(io)` (rooms) or anything with `emitToUser` |
 | `PresenceLike` | kit → adapter | `createPresenceTracker()` or the app's own presence service |
-| `NotifierLike` | kit → app | `@notifykit/core` Notifier fits as-is |
-| `IdentityLike` | gateway → app | `@authkit/core` TokenService fits as-is |
+| `NotifierLike` | kit → app | `@aymenkits/notify-core` Notifier fits as-is |
+| `IdentityLike` | gateway → app | `@aymenkits/auth-core` TokenService fits as-is |
 | `now()` | test seam | fake clock |
 
 ## Wiring order (the only subtlety)

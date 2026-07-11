@@ -1,6 +1,6 @@
 # chat-kit — HTTP contract
 
-The shapes `@chatkit/express` serves and the Flutter/web clients implement.
+The shapes `@aymenkits/chat-express` serves and the Flutter/web clients implement.
 Envelopes vary per app; the payloads below sit inside the app's envelope.
 Realtime delivery is in [EVENTS.md](EVENTS.md) — these REST endpoints cover
 history paging, inbox lists and polling fallbacks.

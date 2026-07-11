@@ -3,9 +3,9 @@
 ## Install
 
 ```bash
-npm install @chatkit/core
-npm install @chatkit/socketio socket.io   # realtime (bring your own io server)
-npm install @chatkit/express              # optional REST endpoints
+npm install @aymenkits/chat-core
+npm install @aymenkits/chat-socketio socket.io   # realtime (bring your own io server)
+npm install @aymenkits/chat-express              # optional REST endpoints
 ```
 
 ## Wiring order (the only subtlety)
@@ -69,8 +69,8 @@ Kits pair **by shape, never by import** — every integration point is a
 parameter interface a sibling kit satisfies structurally. Pass the real kit,
 your own service, or a stub in tests.
 
-- `identity` ← `@authkit/core` TokenService (socket handshake auth).
-- `notifier` ← `@notifykit/core` (chat.message_received with deep-link data
+- `identity` ← `@aymenkits/auth-core` TokenService (socket handshake auth).
+- `notifier` ← `@aymenkits/notify-core` (chat.message_received with deep-link data
   for offline recipients).
 
 ## Migrating from an existing implementation

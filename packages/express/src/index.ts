@@ -1,6 +1,6 @@
 /**
- * @chatkit/express — REST endpoints over a ChatService (the polling/paging
- * side of chat; realtime lives in @chatkit/socketio). Structural req/res
+ * @aymenkits/chat-express — REST endpoints over a ChatService (the polling/paging
+ * side of chat; realtime lives in @aymenkits/chat-socketio). Structural req/res
  * typing (Express 4 + 5), envelope-agnostic, auth-agnostic: by default the
  * user id comes from `req.auth.userId` (authkit middleware), override with
  * `getUserId` for any other auth setup.
@@ -14,7 +14,7 @@
  *
  * Full request/response shapes: contracts/API.md.
  */
-import { ChatError, ChatService, GroupService } from '@chatkit/core'
+import { ChatError, ChatService, GroupService } from '@aymenkits/chat-core'
 
 export interface MinimalRequest {
   headers: Record<string, unknown>

@@ -1,5 +1,5 @@
 {
-  "name": "@chatkit/express",
+  "name": "@aymenkits/chat-express",
   "version": "1.0.0",
   "description": "Express 4/5 handlers for the chat REST endpoints: list threads (with unread counts), history, send, mark read, unread total. Structural req/res typing, envelope-agnostic, auth-agnostic (getUserId seam).",
   "license": "MIT",
@@ -14,7 +14,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@chatkit/core": "1.0.0"
+    "@aymenkits/chat-core": "1.0.0"
   },
   "publishConfig": {
     "access": "public"

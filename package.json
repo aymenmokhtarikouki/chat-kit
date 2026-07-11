@@ -2,14 +2,14 @@
   "name": "chat-kit",
   "version": "0.1.0",
   "private": true,
-  "description": "Shared chat toolkit — scope-typed threads (an order, an inquiry, a salon↔customer pair) with a policy that decides who chats with whom, realtime delivery through a transport seam, presence-aware push fan-out for offline recipients, unread counts, system messages and rate limiting. Pairs with @authkit/core (socket handshake auth) and @notifykit/core (offline push) by shape, never by import.",
+  "description": "Shared chat toolkit — scope-typed threads (an order, an inquiry, a salon↔customer pair) with a policy that decides who chats with whom, realtime delivery through a transport seam, presence-aware push fan-out for offline recipients, unread counts, system messages and rate limiting. Pairs with @aymenkits/auth-core (socket handshake auth) and @aymenkits/notify-core (offline push) by shape, never by import.",
   "license": "MIT",
   "workspaces": [
     "packages/*"
   ],
   "scripts": {
-    "setup": "npm install --include-workspace-root -w @chatkit/core -w @chatkit/socketio -w @chatkit/express && npm run build",
-    "build": "npm run build -w @chatkit/core -w @chatkit/socketio -w @chatkit/express",
+    "setup": "npm install --include-workspace-root -w @aymenkits/chat-core -w @aymenkits/chat-socketio -w @aymenkits/chat-express && npm run build",
+    "build": "npm run build -w @aymenkits/chat-core -w @aymenkits/chat-socketio -w @aymenkits/chat-express",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "vitest run"
   },

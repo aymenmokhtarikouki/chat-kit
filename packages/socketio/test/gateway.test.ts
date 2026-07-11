@@ -3,7 +3,7 @@ import {
   createChatService,
   createMemoryMessageStore,
   createMemoryThreadStore,
-} from '@chatkit/core'
+} from '@aymenkits/chat-core'
 import {
   attachChatGateway,
   createPresenceTracker,

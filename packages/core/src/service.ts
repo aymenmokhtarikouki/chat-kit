@@ -8,7 +8,7 @@
  *
  * Realtime/notifier failures never fail the send (fire-and-forget with an
  * onError hook) — the message is persisted; delivery is best-effort, exactly
- * like @notifykit/core's channel isolation.
+ * like @aymenkits/notify-core's channel isolation.
  */
 import { createRateLimiter, RateLimiter } from './ratelimit'
 import {
@@ -31,11 +31,11 @@ export interface CreateChatServiceArgs<Ctx = unknown> {
   /** Scope type → its rules. Unknown types are rejected outright. */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   policy: { scopes: Record<string, ScopePolicy<any, Ctx>> }
-  /** Delivery transport (@chatkit/socketio provides one). Omit in tests. */
+  /** Delivery transport (@aymenkits/chat-socketio provides one). Omit in tests. */
   realtime?: RealtimeLike
   /** Online check — offline recipients get the notifier. Omit → notify all. */
   presence?: PresenceLike
-  /** Pairs with @notifykit/core — offline recipients get 'chat.message_received'. */
+  /** Pairs with @aymenkits/notify-core — offline recipients get 'chat.message_received'. */
   notifier?: NotifierLike
   /** Per-sender flood control. Default { windowMs: 10_000, max: 10 }; false disables. */
   rateLimit?: { windowMs: number; max: number } | false

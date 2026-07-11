@@ -1,14 +1,14 @@
-# @chatkit/express
+# @aymenkits/chat-express
 
 Express 4/5 REST endpoints over a ChatService: threads with unread counts, history paging, send, mark read, unread total. Envelope- and auth-agnostic.
 
 ## Install
 
 ```bash
-npm install @chatkit/express
+npm install @aymenkits/chat-express
 ```
 
-Installs with it: `@chatkit/core` (automatic dependency).
+Installs with it: `@aymenkits/chat-core` (automatic dependency).
 
 ## You provide
 
@@ -21,7 +21,7 @@ app implements on its own stack.
 ## Quick example
 
 ```ts
-import { createChatHandlers } from '@chatkit/express'
+import { createChatHandlers } from '@aymenkits/chat-express'
 
 const h = createChatHandlers(chat, { wrapResponse })
 router.get('/chat/threads', requireAuth, h.listThreads)
@@ -29,8 +29,8 @@ router.get('/chat/threads', requireAuth, h.listThreads)
 
 ## Pairs with
 
-- `@authkit/express` middleware upstream
-- `@chatkit/socketio` for the realtime side
+- `@aymenkits/auth-express` middleware upstream
+- `@aymenkits/chat-socketio` for the realtime side
 
 Kits pair **by shape, never by import** — pass the sibling kit, your own
 service, or a stub in tests.

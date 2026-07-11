@@ -1,7 +1,7 @@
 {
-  "name": "@chatkit/socketio",
+  "name": "@aymenkits/chat-socketio",
   "version": "1.0.0",
-  "description": "Socket.IO glue for @chatkit/core: handshake auth through an identity seam (@authkit/core TokenService fits as-is), per-user rooms, presence tracker, RealtimeLike transport and inbound chat:send / chat:read handlers with configurable event names. Structural typing — no socket.io dependency.",
+  "description": "Socket.IO glue for @aymenkits/chat-core: handshake auth through an identity seam (@aymenkits/auth-core TokenService fits as-is), per-user rooms, presence tracker, RealtimeLike transport and inbound chat:send / chat:read handlers with configurable event names. Structural typing — no socket.io dependency.",
   "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -14,7 +14,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@chatkit/core": "1.0.0"
+    "@aymenkits/chat-core": "1.0.0"
   },
   "publishConfig": {
     "access": "public"

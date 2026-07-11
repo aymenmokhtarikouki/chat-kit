@@ -83,13 +83,13 @@ export interface MessageStore {
 
 // ─── Pairs-with seams (shape-compatible with sibling kits) ───────────────────
 
-/** Structurally satisfied by @notifykit/core's Notifier. */
+/** Structurally satisfied by @aymenkits/notify-core's Notifier. */
 export interface NotifierLike {
   notify(userIds: string | string[], event: { type: string; data?: unknown }): Promise<unknown>
 }
 
 /**
- * Delivery transport. @chatkit/socketio provides one over Socket.IO rooms;
+ * Delivery transport. @aymenkits/chat-socketio provides one over Socket.IO rooms;
  * anything with this shape works (SSE hub, tests, …).
  */
 export interface RealtimeLike {
@@ -99,7 +99,7 @@ export interface RealtimeLike {
 /**
  * Presence check: recipients who are online get realtime only; offline ones
  * get the notifier (push). Omit presence → every recipient is also notified.
- * @chatkit/socketio's presence tracker satisfies this.
+ * @aymenkits/chat-socketio's presence tracker satisfies this.
  */
 export interface PresenceLike {
   isOnline(userId: string): boolean | Promise<boolean>
