@@ -191,6 +191,31 @@ describe('sendMessage', () => {
     expect(emitted.some((e) => e.event === 'new_message')).toBe(true)
     expect(emitted.some((e) => e.event === 'chat:new_message')).toBe(false)
   })
+
+  it('formatRealtimePayload reshapes the emitted payload (legacy wire shapes)', async () => {
+    const threads = createMemoryThreadStore()
+    const messages = createMemoryMessageStore()
+    const emitted: Array<{ userId: string; payload: unknown }> = []
+    const service = createChatService({
+      stores: { threads, messages },
+      policy: { scopes: { order: orderPolicy() } },
+      realtime: { emitToUser: (userId, _event, payload) => void emitted.push({ userId, payload }) },
+      rateLimit: false,
+      // e.g. lineo's { conversationId, message, senderName, preview } wire
+      formatRealtimePayload: ({ thread, message }) => ({
+        conversationId: thread.id,
+        message: { id: message.id, body: message.text },
+        preview: message.text.slice(0, 120),
+      }),
+    })
+    await service.sendMessage({ scopeType: 'order', scopeId: 'order-1', senderId: 'cust-1', text: 'hello there' })
+    expect(emitted[0]!.payload).toMatchObject({
+      conversationId: expect.any(String),
+      message: { body: 'hello there' },
+      preview: 'hello there',
+    })
+    expect((emitted[0]!.payload as { threadId?: string }).threadId).toBeUndefined()
+  })
 })
 
 describe('postSystemMessage', () => {

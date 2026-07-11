@@ -44,6 +44,12 @@ export interface CreateChatServiceArgs<Ctx = unknown> {
   textMaxLength?: number
   /** Notification preview length. Default 140. */
   previewLength?: number
+  /**
+   * Shape the realtime payload your deployed clients expect (sync — thread
+   * and message are already loaded). Default:
+   * `{ threadId, scopeType, scopeId, message }`.
+   */
+  formatRealtimePayload?: (input: { thread: ChatThread; message: ChatMessage }) => unknown
   /** Delivery failure observability (sends never fail on it). */
   onError?: (stage: 'realtime' | 'notify', error: unknown) => void
   /** Clock override for tests. */
@@ -165,12 +171,14 @@ export function createChatService<Ctx = unknown>(args: CreateChatServiceArgs<Ctx
   }
 
   async function deliver(thread: ChatThread, message: ChatMessage): Promise<void> {
-    const payload = {
-      threadId: thread.id,
-      scopeType: thread.scopeType,
-      scopeId: thread.scopeId,
-      message,
-    }
+    const payload = args.formatRealtimePayload
+      ? args.formatRealtimePayload({ thread, message })
+      : {
+          threadId: thread.id,
+          scopeType: thread.scopeType,
+          scopeId: thread.scopeId,
+          message,
+        }
     emit(thread.participantIds, events.messageNew, payload)
 
     if (!notifier) return

@@ -48,7 +48,40 @@ router.get('/chat/threads', requireAuth, h.listThreads)
 // …
 ```
 
-## yuma mapping (module `chat`)
+## Adoption verdicts for the existing apps (2026-07-11)
+
+First-adoption analysis against both production chat systems produced two
+**deliberate non-swaps** (same reasoning as yuma notifications vs notifykit —
+never rewrite a working superset to fit kit v1):
+
+- **yuma `chat` — not swapped.** Its realtime is room-RPC style: clients join
+  ORDER rooms, deliveries broadcast the fully-mapped `{ message, thread }`
+  response objects, and the socket doubles as an RPC surface (list messages/
+  threads, typing, unread counts over events). Reproducing that through the
+  kit's per-user pipeline means async payload re-fetch adapters and N-times
+  dedup — a re-implementation wearing a kit costume. yuma chat is the system
+  this kit was distilled from; it keeps its superset.
+- **lineo `messages` — deferred.** Closer fit (it already emits per-user),
+  but conversations carry **per-participant roles** written at creation
+  (owner/manager/stylist — drive notification routing), scopes are computed
+  dedup-keys with four target-resolution modes, and listing marks read.
+  Squeezing those through v0.1 seams loses the role data. Adopt when v2 has
+  participant metadata.
+
+**chat-kit v2 requirements harvested from this analysis:**
+1. Participant metadata (`participants: Array<{ userId, meta }>`), threaded
+   through stores, policy and notifier — lineo's roles.
+2. Optional room/broadcast transport semantics (emit once per thread room)
+   next to per-user emits — yuma's order rooms.
+3. ✅ Configurable realtime payload (`formatRealtimePayload`, shipped v0.1.1).
+4. Store-level message extras (yuma's `messageType`, per-message read flags)
+   — likely via a `meta` passthrough on create/list.
+
+The kit targets **new apps** today (it composes with authkit/notifykit out of
+the box); the mappings below are the reference for when v2 makes the
+migrations mechanical.
+
+## yuma mapping (module `chat`) — reference, see verdict above
 
 | today | with the kit |
 | --- | --- |
@@ -67,7 +100,7 @@ router.get('/chat/threads', requireAuth, h.listThreads)
 - yuma already has a presence service — either keep it (`PresenceLike` is one
   method) or switch to the kit tracker.
 
-## lineo mapping (module `messages`)
+## lineo mapping (module `messages`) — reference, see verdict above
 
 | today | with the kit |
 | --- | --- |
