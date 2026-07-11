@@ -1,0 +1,32 @@
+name: Publish to npm
+
+# Push a version tag to publish every public workspace package:
+#   git tag v1.0.1 && git push origin v1.0.1
+# Requires the NPM_TOKEN repo secret (granular automation token with
+# publish rights on the kit's scope).
+
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install + build (same path CI consumers use)
+        run: npm run setup
+
+      - name: Tests
+        run: npm test --if-present
+
+      - name: Publish public workspaces
+        run: npm publish --workspaces --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
