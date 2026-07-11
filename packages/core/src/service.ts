@@ -171,14 +171,22 @@ export function createChatService<Ctx = unknown>(args: CreateChatServiceArgs<Ctx
   }
 
   async function deliver(thread: ChatThread, message: ChatMessage): Promise<void> {
-    const payload = args.formatRealtimePayload
-      ? args.formatRealtimePayload({ thread, message })
-      : {
-          threadId: thread.id,
-          scopeType: thread.scopeType,
-          scopeId: thread.scopeId,
-          message,
-        }
+    // Delivery must never fail a send: a throwing formatter is reported and
+    // the default payload shape goes out instead.
+    const defaultPayload = {
+      threadId: thread.id,
+      scopeType: thread.scopeType,
+      scopeId: thread.scopeId,
+      message,
+    }
+    let payload: unknown = defaultPayload
+    if (args.formatRealtimePayload) {
+      try {
+        payload = args.formatRealtimePayload({ thread, message })
+      } catch (err) {
+        onError?.('realtime', err)
+      }
+    }
     emit(thread.participantIds, events.messageNew, payload)
 
     if (!notifier) return
