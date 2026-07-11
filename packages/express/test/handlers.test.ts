@@ -88,3 +88,25 @@ describe('createChatHandlers', () => {
     expect(bad.state.code).toBe(400)
   })
 })
+
+describe('hostile query input', () => {
+  it('NaN limit/offset and garbage before-dates are ignored', async () => {
+    const chat = buildChat()
+    await chat.sendMessage({ scopeType: 'order', scopeId: 'order-1', senderId: 'cook-1', text: 'hi' })
+    const thread = await chat.getOrCreateThread({ scopeType: 'order', scopeId: 'order-1' })
+    const h = createChatHandlers(chat)
+
+    const threads = fakeRes()
+    await h.listThreads(req({ auth: { userId: 'cust-1' }, query: { limit: 'abc', offset: '-1' } }), threads.res)
+    expect(threads.state.code).toBe(200)
+    expect((threads.state.body as { total: number }).total).toBe(1)
+
+    const messages = fakeRes()
+    await h.listMessages(
+      req({ auth: { userId: 'cust-1' }, params: { id: thread.id }, query: { before: 'not-a-date', limit: 'NaN' } }),
+      messages.res,
+    )
+    expect(messages.state.code).toBe(200)
+    expect((messages.state.body as unknown[]).length).toBe(1) // garbage date ignored, message visible
+  })
+})

@@ -1,6 +1,6 @@
 # chat-kit
 
-Shared chat toolkit for marketplace apps (yuma, lineo, and whatever comes
+Shared chat toolkit for apps where conversations belong to domain objects (whatever comes
 next). Threads are **scope-typed** — a conversation is always *about*
 something the app declares: an order, a custom-cake inquiry, a salon↔customer
 pair — and the **policy decides who chats with whom**: participants come from
@@ -88,7 +88,7 @@ listen to.
 - [contracts/API.md](contracts/API.md) — REST shapes for Flutter/web clients
 - [contracts/EVENTS.md](contracts/EVENTS.md) — socket event payloads (both directions)
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — seams and design decisions
-- [docs/INTEGRATION.md](docs/INTEGRATION.md) — adopting in yuma / lineo, migration notes
+- [docs/INTEGRATION.md](docs/INTEGRATION.md) — adopting in an existing app, migration notes
 
 ## Development
 

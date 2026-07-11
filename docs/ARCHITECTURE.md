@@ -42,15 +42,15 @@ Realtime goes to every participant (multi-tab safe via per-user rooms). Push
 goes only to recipients who are offline *right now* — `PresenceLike` is the
 seam, and `@chatkit/socketio`'s tracker (socket count per user) implements
 it. Without presence, every non-sender recipient is notified — the safe
-default for apps without sockets (yuma's web client can start there).
+default for apps without sockets (a web client can start there).
 
 ### System messages
 `postSystemMessage` writes an authorless message and notifies **all**
 participants. This is how order/inquiry status changes land inside the
-conversation (yuma's inquiry system messages) without faking a sender.
+conversation (e.g. inquiry status updates) without faking a sender.
 
 ### Event-name compatibility
-Both apps have deployed Flutter clients listening to their own event names.
+Deployed clients keep listening to their existing event names.
 Outbound names (`events.messageNew`, `events.threadRead`) and inbound names
 (`inbound.send`, `inbound.read`) are config — migration never breaks a
 shipped client.
@@ -65,9 +65,9 @@ endpoint on next open.
 
 | seam | direction | implemented by |
 | --- | --- | --- |
-| `ThreadStore` / `MessageStore` | kit → app | Prisma (yuma) / raw pg (lineo); memory stores are the reference |
+| `ThreadStore` / `MessageStore` | kit → app | Prisma / raw SQL; memory stores are the reference |
 | `RealtimeLike` | kit → adapter | `createSocketTransport(io)` (rooms) or anything with `emitToUser` |
-| `PresenceLike` | kit → adapter | `createPresenceTracker()` or the app's own (yuma has a presence service) |
+| `PresenceLike` | kit → adapter | `createPresenceTracker()` or the app's own presence service |
 | `NotifierLike` | kit → app | `@notifykit/core` Notifier fits as-is |
 | `IdentityLike` | gateway → app | `@authkit/core` TokenService fits as-is |
 | `now()` | test seam | fake clock |
@@ -84,12 +84,12 @@ Create presence and transport first, service second, attach the gateway last
   a message carries whatever reference the app wants.
 - **Typing indicators** — pure realtime sugar, no persistence; apps can emit
   them on the same socket without kit involvement.
-- **lineo's owner broadcast** (one message to N customers) — that is a
+- **Owner broadcast** (one message to N recipients) — that is a
   fan-out of independent notifications, not a thread concern; it stays on
   notifykit. If a per-customer thread message is ever wanted, it's a loop
   over `sendMessage`.
-- **Cross-instance presence/rooms** — both apps are single-node; a Redis
+- **Cross-instance presence/rooms** — single-node is the v1 target; a Redis
   adapter can implement `PresenceLike`/`RealtimeLike` later without touching
   the core.
-- **Delete/edit messages** — neither app has it; adding a store method +
+- **Delete/edit messages** — adding a store method +
   service call later is non-breaking.

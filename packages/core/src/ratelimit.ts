@@ -1,5 +1,5 @@
 /**
- * Per-key sliding-window rate limiter (yuma's chat gateway shipped exactly
+ * Per-key sliding-window rate limiter (a production chat gateway shipped exactly
  * this shape: 10 messages / 10 s per socket). Pure Map, no timers — expired
  * entries are reset on access and swept opportunistically so the map never
  * grows unbounded.

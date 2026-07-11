@@ -46,4 +46,4 @@ https://github.com/aymenmokhtarikouki/chat-kit (`contracts/`, `docs/`).
 
 ## License
 
-UNLICENSED — published for use by the author's applications.
+MIT

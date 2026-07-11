@@ -84,6 +84,22 @@ export function createChatHandlers(
     return typeof value === 'string' && value.length > 0 ? value : undefined
   }
 
+  /** Hostile-input safe: '', 'abc', -1 → undefined; caps at `max`. */
+  function num(value: unknown, max?: number): number | undefined {
+    if (value === undefined || value === '') return undefined
+    const n = Number(value)
+    if (!Number.isFinite(n) || n < 0) return undefined
+    return max !== undefined ? Math.min(n, max) : n
+  }
+
+  /** Invalid dates never reach the store. */
+  function date(value: unknown): Date | undefined {
+    const raw = str(value)
+    if (!raw) return undefined
+    const d = new Date(raw)
+    return Number.isNaN(d.getTime()) ? undefined : d
+  }
+
   return {
     async listThreads(req, res, next) {
       try {
@@ -92,8 +108,8 @@ export function createChatHandlers(
         const q = req.query ?? {}
         const result = await chat.listThreads({
           userId,
-          limit: q.limit !== undefined ? Number(q.limit) : undefined,
-          offset: q.offset !== undefined ? Number(q.offset) : undefined,
+          limit: num(q.limit, 100),
+          offset: num(q.offset),
         })
         res.status(200).json(wrap(result))
       } catch (err) {
@@ -111,12 +127,11 @@ export function createChatHandlers(
           return
         }
         const q = req.query ?? {}
-        const before = str(q.before)
         const messages = await chat.listMessages({
           threadId,
           userId,
-          before: before ? new Date(before) : undefined,
-          limit: q.limit !== undefined ? Number(q.limit) : undefined,
+          before: date(q.before),
+          limit: num(q.limit, 100),
         })
         res.status(200).json(wrap(messages))
       } catch (err) {

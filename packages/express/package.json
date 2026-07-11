@@ -2,11 +2,12 @@
   "name": "@chatkit/express",
   "version": "1.0.0",
   "description": "Express 4/5 handlers for the chat REST endpoints: list threads (with unread counts), history, send, mark read, unread total. Structural req/res typing, envelope-agnostic, auth-agnostic (getUserId seam).",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "LICENSE"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -22,5 +23,22 @@
     "type": "git",
     "url": "git+https://github.com/aymenmokhtarikouki/chat-kit.git",
     "directory": "packages/express"
-  }
+  },
+  "keywords": [
+    "chat",
+    "messaging",
+    "socket.io",
+    "realtime",
+    "threads",
+    "express"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "sideEffects": false,
+  "homepage": "https://github.com/aymenmokhtarikouki/chat-kit#readme",
+  "bugs": {
+    "url": "https://github.com/aymenmokhtarikouki/chat-kit/issues"
+  },
+  "author": "Aymen Mokhtari"
 }

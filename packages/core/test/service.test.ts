@@ -4,7 +4,7 @@ import { createChatService } from '../src/service'
 import { ScopePolicy } from '../src/types'
 
 /**
- * A miniature yuma/lineo world: order threads between customer and cook
+ * A miniature marketplace world: order threads between customer and cook
  * (posting closes when the order is cancelled), salon-pair threads whose
  * staff roster can drift.
  */
@@ -201,7 +201,7 @@ describe('sendMessage', () => {
       policy: { scopes: { order: orderPolicy() } },
       realtime: { emitToUser: (userId, _event, payload) => void emitted.push({ userId, payload }) },
       rateLimit: false,
-      // e.g. lineo's { conversationId, message, senderName, preview } wire
+      // e.g. a legacy { conversationId, message, senderName, preview } wire
       formatRealtimePayload: ({ thread, message }) => ({
         conversationId: thread.id,
         message: { id: message.id, body: message.text },

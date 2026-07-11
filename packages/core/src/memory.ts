@@ -1,7 +1,7 @@
 /**
  * In-memory stores — reference implementations for tests, demos and as
  * living documentation of each method's contract. Real apps implement the
- * stores on their own schema (Prisma in yuma, raw pg in lineo).
+ * stores on their own schema (Prisma, raw SQL, anything).
  */
 import { ChatMessage, ChatThread, MessageKind, MessageStore, ThreadStore } from './types'
 

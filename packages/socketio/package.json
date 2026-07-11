@@ -2,11 +2,12 @@
   "name": "@chatkit/socketio",
   "version": "1.0.0",
   "description": "Socket.IO glue for @chatkit/core: handshake auth through an identity seam (@authkit/core TokenService fits as-is), per-user rooms, presence tracker, RealtimeLike transport and inbound chat:send / chat:read handlers with configurable event names. Structural typing — no socket.io dependency.",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "LICENSE"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -22,5 +23,22 @@
     "type": "git",
     "url": "git+https://github.com/aymenmokhtarikouki/chat-kit.git",
     "directory": "packages/socketio"
-  }
+  },
+  "keywords": [
+    "chat",
+    "messaging",
+    "socket.io",
+    "realtime",
+    "threads",
+    "socketio"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "sideEffects": false,
+  "homepage": "https://github.com/aymenmokhtarikouki/chat-kit#readme",
+  "bugs": {
+    "url": "https://github.com/aymenmokhtarikouki/chat-kit/issues"
+  },
+  "author": "Aymen Mokhtari"
 }

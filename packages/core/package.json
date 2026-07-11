@@ -2,11 +2,12 @@
   "name": "@chatkit/core",
   "version": "1.0.0",
   "description": "Chat engine: scope-typed threads (order/inquiry/salon-pair) with a policy deciding who chats with whom, send pipeline persist → realtime → presence-miss → notifier, unread counts, system messages, per-sender rate limiting. Seams: ThreadStore, MessageStore, RealtimeLike, PresenceLike, NotifierLike (matches @notifykit/core by shape). Zero dependencies.",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "LICENSE"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -19,5 +20,22 @@
     "type": "git",
     "url": "git+https://github.com/aymenmokhtarikouki/chat-kit.git",
     "directory": "packages/core"
-  }
+  },
+  "keywords": [
+    "chat",
+    "messaging",
+    "socket.io",
+    "realtime",
+    "threads",
+    "core"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "sideEffects": false,
+  "homepage": "https://github.com/aymenmokhtarikouki/chat-kit#readme",
+  "bugs": {
+    "url": "https://github.com/aymenmokhtarikouki/chat-kit/issues"
+  },
+  "author": "Aymen Mokhtari"
 }

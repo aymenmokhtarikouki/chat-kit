@@ -1,123 +1,76 @@
 # Integrating chat-kit
 
-Submodule + `file:` deps, exactly like the other kits:
+## Install
 
 ```bash
-git submodule add git@github.com:aymenmokhtarikouki/chat-kit.git vendor/chat-kit
+npm install @chatkit/core
+npm install @chatkit/socketio socket.io   # realtime (bring your own io server)
+npm install @chatkit/express              # optional REST endpoints
 ```
 
-```jsonc
-// package.json — only declare what you import
-"dependencies": {
-  "@chatkit/core": "file:vendor/chat-kit/packages/core",
-  "@chatkit/socketio": "file:vendor/chat-kit/packages/socketio",
-  "@chatkit/express": "file:vendor/chat-kit/packages/express"
+## Wiring order (the only subtlety)
+
+```ts
+const presence  = createPresenceTracker()
+const transport = createSocketTransport(io)
+const chat      = createChatService({ stores, realtime: transport, presence, notifier, policy })
+attachChatGateway({ io, chat, identity: tokenService, presence })
+```
+
+## Declare your scopes
+
+A thread is always about something. One scope entry per domain type:
+
+```ts
+policy: {
+  scopes: {
+    order: {
+      loadScope: (id) => orders.findById(id),          // throw YOUR errors freely
+      participants: (o) => [o.customerId, o.vendorId],
+      canPost: ({ scope }) => scope.status !== 'CANCELLED',
+    },
+  },
 }
 ```
 
-Add `npm --prefix vendor/chat-kit run setup` to your `kits:setup` script; CI
-inits the submodule and runs kits:setup BEFORE `npm ci`.
+## Deployed clients keep working
 
-## Full wiring with the sibling kits
+Every event name — outbound (`events.messageNew`, `events.threadRead`) and
+inbound (`inbound.send`, `inbound.read`) — is configurable, and
+`formatRealtimePayload` reshapes the emitted payload to whatever your
+existing clients already parse. Migrating a live chat system never requires a
+client release.
 
-```ts
-import { createChatService } from '@chatkit/core'
-import { attachChatGateway, createPresenceTracker, createSocketTransport } from '@chatkit/socketio'
-import { createChatHandlers } from '@chatkit/express'
+## Store notes
 
-const presence  = createPresenceTracker()
-const transport = createSocketTransport(io)
+- `MessageStore.countOthersSince` defines unread = messages not sent by the
+  user after their last-read marker; a per-message read-flag schema can
+  implement the same contract by ignoring `since`.
+- System messages have `senderId: null`; if your schema requires a sender,
+  map null to a designated system/owner user in the store.
 
-const chat = createChatService({
-  stores: { threads, messages },       // your Prisma/pg stores
-  realtime: transport,
-  presence,
-  notifier,                            // @notifykit/core — offline push
-  policy: { scopes: { /* order, inquiry, salonPair, … */ } },
-  events: { messageNew: 'new_message' },      // ← your deployed client's names
-})
+## Pairing with sibling kits
 
-attachChatGateway({
-  io, chat, presence,
-  identity: tokenService,              // @authkit/core — handshake auth
-  inbound: { send: 'send_message', read: 'mark_read' },
-})
+Kits pair **by shape, never by import** — every integration point is a
+parameter interface a sibling kit satisfies structurally. Pass the real kit,
+your own service, or a stub in tests.
 
-const h = createChatHandlers(chat, { wrapResponse: createApiResponse })
-router.get('/chat/threads', requireAuth, h.listThreads)
-// …
-```
+- `identity` ← `@authkit/core` TokenService (socket handshake auth).
+- `notifier` ← `@notifykit/core` (chat.message_received with deep-link data
+  for offline recipients).
 
-## Adoption verdicts for the existing apps (2026-07-11)
+## Migrating from an existing implementation
 
-First-adoption analysis against both production chat systems produced two
-**deliberate non-swaps** (same reasoning as yuma notifications vs notifykit —
-never rewrite a working superset to fit kit v1):
+The kits were extracted from production systems, and these rules kept those
+migrations safe:
 
-- **yuma `chat` — not swapped.** Its realtime is room-RPC style: clients join
-  ORDER rooms, deliveries broadcast the fully-mapped `{ message, thread }`
-  response objects, and the socket doubles as an RPC surface (list messages/
-  threads, typing, unread counts over events). Reproducing that through the
-  kit's per-user pipeline means async payload re-fetch adapters and N-times
-  dedup — a re-implementation wearing a kit costume. yuma chat is the system
-  this kit was distilled from; it keeps its superset.
-- **lineo `messages` — deferred.** Closer fit (it already emits per-user),
-  but conversations carry **per-participant roles** written at creation
-  (owner/manager/stylist — drive notification routing), scopes are computed
-  dedup-keys with four target-resolution modes, and listing marks read.
-  Squeezing those through v0.1 seams loses the role data. Adopt when v2 has
-  participant metadata.
-
-**chat-kit v2 requirements harvested from this analysis:**
-1. Participant metadata (`participants: Array<{ userId, meta }>`), threaded
-   through stores, policy and notifier — lineo's roles.
-2. Optional room/broadcast transport semantics (emit once per thread room)
-   next to per-user emits — yuma's order rooms.
-3. ✅ Configurable realtime payload (`formatRealtimePayload`, shipped v0.1.1).
-4. Store-level message extras (yuma's `messageType`, per-message read flags)
-   — likely via a `meta` passthrough on create/list.
-
-The kit targets **new apps** today (it composes with authkit/notifykit out of
-the box); the mappings below are the reference for when v2 makes the
-migrations mechanical.
-
-## yuma mapping (module `chat`) — reference, see verdict above
-
-| today | with the kit |
-| --- | --- |
-| `getOrCreateThreadForOrder` / `getChatForOrder` | scope type `order` — `participants: (o) => [o.consumerId, o.cookId]` |
-| `getChatForInquiry` / `sendMessageForInquiry` | scope type `inquiry` (ChatThread.inquiryId becomes the scopeId) |
-| `postInquirySystemMessage` | `postSystemMessage` |
-| `chat.gateway.ts` (rooms, rate limit 10/10s, presence check, `notifyNewMessage`) | `attachChatGateway` + the built-in limiter + presence tracker + notifier param |
-| `listThreadsForUserService` / unread counts / mark-read | `listThreads` / `unreadCount` / `markRead` |
-
-- `ThreadStore` maps onto the existing `ChatThread` table — `scopeType`/`scopeId`
-  generalize the current `orderId`/`inquiryId` columns
-  (`scopeId = orderId ?? inquiryId`, additive migration or a view).
-- Keep yuma's socket event names via `events`/`inbound` config — the deployed
-  Flutter app must not notice (`CHAT_EVENTS` in `realtime/socket.events.ts`
-  lists the names to pass).
-- yuma already has a presence service — either keep it (`PresenceLike` is one
-  method) or switch to the kit tracker.
-
-## lineo mapping (module `messages`) — reference, see verdict above
-
-| today | with the kit |
-| --- | --- |
-| `getOrCreateConversation` (salon↔customer) | scope type `salonPair` — `participants` from the pair + staff |
-| `sendMessage` → `emitNewMessage` + engine `onMessageReceived` | the kit pipeline; pass the engine/notifier as `notifier` |
-| `listConversations` / `unreadCount` | `listThreads` / `unreadTotal` |
-| `broadcast` (owner → all customers) | **stays app-side** — it's a notification fan-out, not a thread (see ARCHITECTURE) |
-
-- lineo's clients listen to their own event names — pass them via config.
-- lineo has no presence tracker today: omit `presence` (all recipients get
-  push, current behavior) or adopt the kit tracker for the online-skip.
-
-## Migration rules (same as every kit)
-
-1. **Endpoint-by-endpoint behind identical URLs and identical socket event
-   names** — deployed Flutter clients are the hard constraint.
-2. Data stays put; stores map to existing tables.
-3. Delete the superseded gateway/service code in the same change (no stale code).
-4. Clean-state-verify the kit before bumping submodule pointers
-   (`rm -rf node_modules packages/*/dist package-lock.json && npm run setup && npm test`).
+1. **Never rewrite a working flow in one step.** Keep your endpoint URLs,
+   response envelopes and (for realtime) socket event names byte-identical;
+   swap the implementation underneath, one endpoint at a time.
+2. **Data stays put.** The store seams map onto your existing tables — new
+   capabilities need at most additive columns, never a data migration.
+3. **Delete the superseded code in the same change.** Two implementations of
+   the same behavior is how drift starts.
+4. Where the kit enforces domain rules through policy hooks, your hooks may
+   THROW your app's own error types — the kit re-throws them untouched, so
+   your API's error contract survives the swap.
